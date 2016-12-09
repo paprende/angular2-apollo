@@ -1,5 +1,7 @@
 # angular2-apollo
 
+Fork of https://github.com/apollostack/angular2-apollo that migrates away from angular cli build and configures websockets.
+
 [![npm version](https://badge.fury.io/js/angular2-apollo.svg)](https://badge.fury.io/js/angular2-apollo)
 [![Get on Slack](https://img.shields.io/badge/slack-join-orange.svg)](http://www.apollostack.com/#slack)
 [![Build status](https://travis-ci.org/apollostack/angular2-apollo.svg?branch=master)](https://travis-ci.org/apollostack/angular2-apollo)
