@@ -1,17 +1,16 @@
-import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
-import { Subscription } from 'rxjs';
-import { Angular2Apollo } from 'angular2-apollo';
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Observable, Subscription } from 'rxjs';
+import { select } from 'ng2-redux';
 
-import gql from 'graphql-tag';
+import { PostMap } from './models/post.model';
+import { PostActions } from './actions/post.actions';
 
 @Component({
   selector: 'app-post-list',
   template: `
     <ul>
-      <li *ngFor="let post of _posts">
-        {{post.title}} by {{post.author.firstName}} {{post.author.lastName}}
-        ({{post.votes}} votes)
-
+      <li *ngFor="let post of (_posts | async | toJS)">
+        {{ post.title }} by {{ post.author.firstName  }} {{post.author.lastName}} ({{post.votes}} votes)
         <app-post-upvoter [postId]="post.id"></app-post-upvoter>
       </li>
     </ul>
@@ -19,59 +18,17 @@ import gql from 'graphql-tag';
 })
 export class PostListComponent implements OnInit, OnDestroy {
 
+  @select('posts') _posts: Observable<PostMap>;
   _postUpvotedSub: Subscription;
-  _postsSub: Subscription;
-  _posts: Array<any>;
 
-  constructor(private _apollo: Angular2Apollo, private cdr: ChangeDetectorRef) {}
+  constructor(private _postActions: PostActions) { }
 
   ngOnInit() {
-    this.cdr.detach();
-
-    this._postsSub = this._apollo.watchQuery({
-      query: gql`
-        query allPosts {
-          posts {
-            id
-            title
-            votes
-            author {
-              id
-              firstName
-              lastName
-            }
-          }
-        }
-      `,
-    }).subscribe((response) => {
-      this._posts = response.data.posts;
-      this.cdr.detectChanges();
-    });
-
-    this._postUpvotedSub = this._apollo.subscribe({
-      query: gql`
-        subscription postUpvoted {
-          postUpvoted {
-            id,
-            votes
-          }
-        }
-      `,
-    })
-    .map((response) => response.postUpvoted)
-    .subscribe((postUpvoted) => {
-      this._posts = this._posts.map(post => {
-        if (post.id === postUpvoted.id) {
-          return Object.assign(post, postUpvoted);
-        }
-        return post;
-      });
-      this.cdr.detectChanges();
-    });
+    this._postActions.queryAllPosts();
+    this._postUpvotedSub = this._postActions.subscibeToPostUpvoted();
   }
 
   ngOnDestroy() {
-    this._postsSub.unsubscribe();
     this._postUpvotedSub.unsubscribe();
   }
 }

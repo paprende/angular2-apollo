@@ -1,12 +1,11 @@
-import { Component, Input } from '@angular/core';
-import { Angular2Apollo } from 'angular2-apollo';
-
-import gql from 'graphql-tag';
+import { Component, Input, ChangeDetectionStrategy } from '@angular/core';
+import { PostActions } from './actions/post.actions';
 
 import 'rxjs/add/operator/toPromise';
 
 @Component({
   selector: 'app-post-upvoter',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <button (click)="upvote()">
       Upvote
@@ -16,21 +15,9 @@ import 'rxjs/add/operator/toPromise';
 export class PostUpvoterComponent {
   @Input() postId: number;
 
-  constructor(private apollo: Angular2Apollo) {}
+  constructor(private _postActions: PostActions) {}
 
   upvote() {
-    this.apollo.mutate({
-      mutation: gql`
-        mutation upvotePost($postId: Int!) {
-          upvotePost(postId: $postId) {
-            id
-            votes
-          }
-        }
-      `,
-      variables: {
-        postId: this.postId,
-      },
-    }).toPromise();
+    this._postActions.upvotePost(this.postId);
   }
 }
